@@ -91,7 +91,7 @@ class Planet(db.Model):
             "orbital_period": self.orbital_period,
             "diameter": self.diameter,
             "climate": self.climate,
-            "graviti": self.graviti,
+            "graviti": self.graviti
 
             # do not serialize the password, its a security breach
         }
