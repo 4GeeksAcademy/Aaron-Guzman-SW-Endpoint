@@ -124,6 +124,100 @@ def get_particular_planet(planet_id):
     else:
         return jsonify({'error': 'planet not found'}), 404
 
+
+#[GET] /users Get a list of all the blog post users.
+@app.route('/users', methods=['GET'])
+def get_users():
+    users = User.query.all()
+    users_list = [user.serialize() for user in users]
+
+    return jsonify(users_list), 200
+
+#[GET] /users/favorites Get all the favorites that belong to the current user.
+@app.route('/users/favorites/<int:user_id>', methods=['GET'])
+def get_user_favorites(user_id):
+    user = User.query.get(user_id)
+
+    if user in None:
+        return jsonify({'message': 'User ot found'}), 404
+    
+    favorites = Favorite.query.filter_by(user_id=user_id).all()
+    favorites_list = [favorite.serialize() for favorite in favorites]
+
+    return jsonify({favorites_list}), 200
+
+#[POST] /favorite/planet/<int:planet_id> Add a new favorite planet to the current user with the planet id = planet_id.
+@app.route('/favorite/planet/<int:planet_id>', methods=['POST'])
+def add_favorite_planet(planet_id):
+    data = request.get_json()
+    if 'user_id' not in data:
+        return jsonify({'message':'user_id is required'}), 400
+    user_id = data['user_id']
+
+    user = User.query.get(user_id)
+    planet = Planet.query.get(planet_id)
+
+    if user is None:
+        return jsonify({'message':'User not found'}), 404
+    
+    if planet is None:
+        return jsonify({'message': 'Planet not found'}), 404
+    
+    new_favorite_planet = Favorite(
+        planet_id=planet_id,
+        user_id=user_id
+    )
+
+    db.session.add(new_favorite_planet)
+    db.session.commit()
+
+    return jsonify({'message':'Favorite planet added successfully'}), 201
+
+#[POST] /favorite/people/<int:people_id> Add new favorite people to the current user with the people id = people_id
+
+app.route('/favorite/people/<int:people_id>', methods=['POST'])
+def add_favorite_people(people_id):
+    data = request.get_json()
+    if 'user_id' not in data:
+        return jsonify({'message':'user_id is required'}), 400
+    user_id = data['user_id']
+    user = User.query.get(user_id)
+    people = People.query.get(people_id)
+
+    if user is None:
+        return jsonify({'message':'User ot found'}), 404
+    if people is None:
+        return jsonify({'message': 'People not found'}), 404
+    
+    new_favorite_people = Favorite(
+        people_id=people_id,
+        user_id=user_id
+    )
+
+    db.session.add(new_favorite_people)
+    db.session.commit()
+
+app.route('/favorite/planet/<int:planet_id>', methods=['DELETE'])
+def delete_favorite_planet(planet_id):
+    favorite_to_delete = Favorite.query.get(planet_id)
+    if favorite_to_delete:
+        db.session.delete(favorite_to_delete)
+        db.session.commit()
+        return jsonify({'message': 'Favorite planet deleted successfully'}), 201
+    else:
+        return jsonify({'message': 'Favorite planet not found'}), 404
+
+
+app.route('/favorite/people/<int:people_id>', methods=['DELETE'])
+def delete_favorite_people(people_id):
+    favorite_to_delete = Favorite.query.get(people_id)
+    if favorite_to_delete:
+        db.session.delete(favorite_to_delete)
+        db.session.commit()
+        return jsonify({'message': 'Favorite people deleted successfully'}), 201
+    else:
+        return jsonify({'message': 'Favorite people not found'}), 404
+
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
